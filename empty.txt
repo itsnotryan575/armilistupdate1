@@ -1,0 +1,46 @@
+# Examples of Different Types of Diffs
+
+## Example 1: Simple Addition
+@@ .. @@
++This line was added
+
+## Example 2: Replacement
+@@ .. @@
+-old text to replace
++new replacement text
+
+## Example 3: Multiple Line Changes
+@@ .. @@
+-first old line
+-second old line
+-third old line
++first new line
++second new line
++third new line
+
+## Example 4: Context with Changes
+@@ .. @@
+ This line stays the same
+-remove this line
++add this line instead
+ This line also stays the same
+
+## Example 5: Moving Code
+@@ .. @@
+-function add(a, b) {
+-  return a + b;
+-}
+-
+ function subtract(a, b) {
+   return a - b;
+ }
+@@ .. @@
+   return a * a * a;
+ }
+ 
++function add(a, b) {
++  return a + b;
++}
++
+ function modulo(a, b) {
+   if (b === 0) {
