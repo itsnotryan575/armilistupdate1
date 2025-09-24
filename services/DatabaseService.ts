@@ -42,6 +42,19 @@ class DatabaseServiceClass {
         console.log('Entering web fallback mode - using mock data');
         this.isWebFallback = true;
         // Don't throw error, allow app to continue with mock data
+        
+        // Add listType column migration (nullable, no default)
+        if (!existingColumns.has('listType')) {
+          try {
+            console.log('DB Migration: Adding listType column');
+            await this.db.execAsync(`ALTER TABLE profiles ADD COLUMN listType TEXT;`).catch(() => {});
+            console.log('DB Migration: Successfully added listType column');
+          } catch (columnError) {
+            console.error('DB Migration: Failed to add listType column:', columnError);
+          }
+        } else {
+          console.log('DB Migration: listType column already exists');
+        }
       } else {
         this.readyPromise = null; // Reset on error so init can be retried
         throw error;
