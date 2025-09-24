@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ArmiList } from '@/types/armi-intents';
 
 type ThemePreference = 'light' | 'dark' | 'system';
 type UsageMode = 'social' | 'personal' | 'professional';
+type ArmiListFilter = 'All' | ArmiList;
 
 interface ThemeContextType {
   isDark: boolean;
@@ -11,6 +13,8 @@ interface ThemeContextType {
   setThemePreference: (preference: ThemePreference) => void;
   usageMode: UsageMode;
   setUsageMode: (mode: UsageMode) => void;
+  currentListType: ArmiListFilter;
+  setCurrentListType: (listType: ArmiListFilter) => void;
   getRosterLabel: () => string;
   isLoaded: boolean;
 }
@@ -25,6 +29,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const systemColorScheme = useColorScheme();
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>('system');
   const [usageMode, setUsageModeState] = useState<UsageMode>('social');
+  const [currentListType, setCurrentListTypeState] = useState<ArmiListFilter>('All');
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Calculate effective isDark based on preference and system
@@ -47,6 +52,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       const savedUsage = await AsyncStorage.getItem('usage_mode');
       if (savedUsage && ['social', 'personal', 'professional'].includes(savedUsage)) {
         setUsageModeState(savedUsage as UsageMode);
+      }
+      
+      const savedListType = await AsyncStorage.getItem('current_list_type');
+      if (savedListType && ['All', 'Roster', 'Network', 'People'].includes(savedListType)) {
+        setCurrentListTypeState(savedListType as ArmiListFilter);
       }
     } catch (error) {
       console.error('Error loading theme preference:', error);
@@ -73,15 +83,26 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   };
 
+  const setCurrentListType = async (listType: ArmiListFilter) => {
+    try {
+      await AsyncStorage.setItem('current_list_type', listType);
+      setCurrentListTypeState(listType);
+    } catch (error) {
+      console.error('Error saving current list type:', error);
+    }
+  };
   const getRosterLabel = () => {
-    switch (usageMode) {
-      case 'personal':
-        return 'People';
-      case 'professional':
-        return 'Network';
-      case 'social':
-      default:
+    switch (currentListType) {
+      case 'All':
+        return 'All Contacts';
+      case 'Roster':
         return 'Roster';
+      case 'Network':
+        return 'Network';
+      case 'People':
+        return 'People';
+      default:
+        return 'All Contacts';
     }
   };
   // Don't render until theme is loaded to prevent flash
@@ -90,7 +111,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }
 
   return (
-    <ThemeContext.Provider value={{ isDark, themePreference, setThemePreference, usageMode, setUsageMode, getRosterLabel, isLoaded }}>
+    <ThemeContext.Provider value={{ isDark, themePreference, setThemePreference, usageMode, setUsageMode, currentListType, setCurrentListType, getRosterLabel, isLoaded }}>
       {children}
     </ThemeContext.Provider>
   );

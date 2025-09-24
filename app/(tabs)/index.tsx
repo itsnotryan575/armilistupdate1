@@ -6,6 +6,7 @@ import { DatabaseService } from '@/services/DatabaseService';
 import { ProfileCard } from '@/components/ProfileCard';
 import { SearchHeader } from '@/components/SearchHeader';
 import { FilterModal } from '@/components/FilterModal';
+import { ListSelectorModal } from '@/components/ListSelectorModal';
 import { router } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -16,8 +17,9 @@ export default function RosterScreen() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [selectedTagFilter, setSelectedTagFilter] = useState('all');
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showListSelector, setShowListSelector] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { isDark } = useTheme();
+  const { isDark, currentListType, setCurrentListType } = useTheme();
 
   const theme = {
     text: '#f0f0f0',
@@ -47,7 +49,7 @@ export default function RosterScreen() {
   const loadProfiles = async () => {
     try {
       setLoading(true);
-      const data = await DatabaseService.getAllProfiles();
+      const data = await DatabaseService.getAllProfiles(currentListType);
       setProfiles(data);
     } catch (error) {
       console.error('Error loading profiles:', error);
@@ -129,6 +131,16 @@ export default function RosterScreen() {
     router.push('/profile/create');
   };
 
+  const handleListSelect = (listType: 'All' | 'Roster' | 'Network' | 'People') => {
+    setCurrentListType(listType);
+    // Profiles will reload automatically due to the useEffect dependency on currentListType
+  };
+
+  // Add effect to reload profiles when currentListType changes
+  useEffect(() => {
+    loadProfiles();
+  }, [currentListType]);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <SearchHeader
@@ -136,6 +148,7 @@ export default function RosterScreen() {
         onSearchChange={setSearchQuery}
         onFilterPress={() => setShowFilterModal(true)}
         onAddPress={handleAddPress}
+        onTitlePress={() => setShowListSelector(true)}
         profileCount={filteredProfiles.length}
         theme={theme}
       />
@@ -183,6 +196,14 @@ export default function RosterScreen() {
         onTagFilterSelect={setSelectedTagFilter}
         relationshipTypes={relationshipTypes}
         tagTypes={tagTypes}
+        theme={theme}
+      />
+
+      <ListSelectorModal
+        visible={showListSelector}
+        onClose={() => setShowListSelector(false)}
+        currentSelection={currentListType}
+        onSelect={handleListSelect}
         theme={theme}
       />
     </SafeAreaView>

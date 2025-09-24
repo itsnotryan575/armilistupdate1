@@ -20,6 +20,7 @@ import { Camera, Image as ImageIcon } from 'lucide-react-native';
 import { DatabaseService } from '@/services/DatabaseService';
 import { scheduleBirthdayText } from '@/services/Scheduler';
 import { useTheme } from '@/context/ThemeContext';
+import { ArmiList } from '@/types/armi-intents';
 
 const TAG_COLORS = [
   { name: 'Blue', light: '#DBEAFE', dark: '#1E3A8A', text: '#1E40AF' },
@@ -40,9 +41,15 @@ const RELATIONSHIP_OPTIONS = [
   { key: 'acquaintance', label: 'Acquaintance', color: '#6B7280', icon: 'User' }
 ];
 
+const LIST_OPTIONS = [
+  { key: 'Roster' as ArmiList, label: 'Roster', color: '#EC4899', description: 'Close friends and family' },
+  { key: 'Network' as ArmiList, label: 'Network', color: '#059669', description: 'Professional contacts' },
+  { key: 'People' as ArmiList, label: 'People', color: '#3B82F6', description: 'Social connections' },
+];
+
 export default function CreateProfile() {
   const router = useRouter();
-  const { isDark } = useTheme();
+  const { isDark, currentListType } = useTheme();
   
   const [profile, setProfile] = useState({
     name: '',
@@ -80,6 +87,9 @@ export default function CreateProfile() {
     birthdayTextEnabled: false,
     giftReminderEnabled: false,
   });
+  const [selectedList, setSelectedList] = useState<ArmiList | null>(
+    currentListType !== 'All' ? currentListType : null
+  );
   
   const [saving, setSaving] = useState(false);
   const [newTag, setNewTag] = useState('');
@@ -134,6 +144,7 @@ export default function CreateProfile() {
       // First, create the profile to get a valid ID
       const baseProfileData = {
         ...profile,
+        listType: selectedList,
         lastContactDate: new Date().toISOString(), // Set to current date
       };
       
@@ -696,6 +707,59 @@ export default function CreateProfile() {
             </ScrollView>
           </View>
 
+          {/* List Assignment */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text }]}>List Assignment</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.listOption,
+                  { 
+                    backgroundColor: selectedList === null ? '#6B7280' : (isDark ? '#374151' : '#E5E7EB'),
+                    borderColor: theme.border 
+                  }
+                ]}
+                onPress={() => setSelectedList(null)}
+              >
+                <Text style={[
+                  styles.listOptionText,
+                  { color: selectedList === null ? '#FFFFFF' : (isDark ? theme.text : '#374151') }
+                ]}>
+                  None
+                </Text>
+              </TouchableOpacity>
+              {LIST_OPTIONS.map((option) => {
+                const isSelected = selectedList === option.key;
+                return (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.listOption,
+                      {
+                        backgroundColor: isSelected ? option.color : (isDark ? '#374151' : '#E5E7EB'),
+                        borderColor: theme.border,
+                      }
+                    ]}
+                    onPress={() => setSelectedList(option.key)}
+                  >
+                    <Text style={[
+                      styles.listOptionText,
+                      { color: isSelected ? '#FFFFFF' : (isDark ? theme.text : '#374151') }
+                    ]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <Text style={[styles.listHelpText, { color: theme.primary }]}>
+              {selectedList 
+                ? LIST_OPTIONS.find(opt => opt.key === selectedList)?.description || ''
+                : 'Profile will appear in All Contacts only'
+              }
+            </Text>
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.text }]}>Job</Text>
             <TextInput
@@ -1112,6 +1176,26 @@ const styles = StyleSheet.create({
   relationshipOptionText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  listOptions: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  listOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+  },
+  listOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  listHelpText: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
   tagsContainer: {
     flexDirection: 'row',

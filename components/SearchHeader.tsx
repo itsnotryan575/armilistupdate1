@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Pressable } from 'react-native';
 import { Search, Filter, Plus } from 'lucide-react-native';
 import { Users } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,10 +9,11 @@ interface SearchHeaderProps {
   onSearchChange: (query: string) => void;
   onFilterPress: () => void;
   onAddPress: () => void;
+  onTitlePress: () => void;
   profileCount: number;
 }
 
-export function SearchHeader({ searchQuery, onSearchChange, onFilterPress, onAddPress, profileCount }: SearchHeaderProps) {
+export function SearchHeader({ searchQuery, onSearchChange, onFilterPress, onAddPress, onTitlePress, profileCount }: SearchHeaderProps) {
   const { isDark, getRosterLabel } = useTheme();
 
   const theme = {
@@ -30,7 +31,9 @@ export function SearchHeader({ searchQuery, onSearchChange, onFilterPress, onAdd
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <Users size={32} color={theme.text} />
-        <Text style={[styles.title, { color: theme.text }]}>My {getRosterLabel()}</Text>
+        <Pressable onPress={onTitlePress} style={styles.titleContainer}>
+          <Text style={[styles.title, { color: theme.text }]}>My {getRosterLabel()}</Text>
+        </Pressable>
       </View>
       <Text style={[styles.subtitle, { color: theme.primary }]}>{profileCount} profiles</Text>
 
@@ -68,6 +71,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  titleContainer: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   title: {
     fontSize: 28,

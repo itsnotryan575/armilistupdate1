@@ -24,6 +24,7 @@ import { scheduleText } from '@/services/textService';
 import { DatabaseService } from '@/services/DatabaseService';
 import { router } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
+import { setProfileList } from '@/services/profileService';
 
 export default function AddInteractionScreen() {
   const [inputText, setInputText] = useState('');
@@ -84,7 +85,9 @@ export default function AddInteractionScreen() {
     }
   };
 
-  const executeIntent = async (intent: ArmiIntent) => {
+  const executeIntent = async (intent: ArmiIntent | undefined) => {
+    if (!intent) return;
+    
     try {
       setIsProcessing(true);
       
@@ -105,6 +108,7 @@ export default function AddInteractionScreen() {
               phone: profileArgs.phone || null,
               notes: profileArgs.notes || null,
               tags: profileArgs.tags || [],
+              listType: profileArgs.listType || null,
               lastContactDate: new Date().toISOString(),
             });
           }
@@ -120,6 +124,14 @@ export default function AddInteractionScreen() {
           setChatMessages(prev => [...prev, { 
             type: 'ai', 
             text: 'Profile editing via AI is coming soon. For now, please use the manual edit option in your contacts.'
+          }]);
+          break;
+          
+        case 'set_profile_list':
+          await setProfileList(intent.args);
+          setChatMessages(prev => [...prev, { 
+            type: 'ai', 
+            text: `Perfect! I've moved ${intent.args.profileName || 'the profile'} to your ${intent.args.listType} list.`
           }]);
           break;
           
