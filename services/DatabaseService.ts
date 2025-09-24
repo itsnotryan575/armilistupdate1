@@ -210,6 +210,7 @@ class DatabaseServiceClass {
         { name: 'birthdayTextScheduledTextId', definition: 'INTEGER' },
         { name: 'giftReminderEnabled', definition: 'INTEGER DEFAULT 0' },
         { name: 'giftReminderId', definition: 'INTEGER' },
+        { name: 'listType', definition: 'TEXT' },
       ];
       
       // Add missing columns individually with error handling
@@ -233,7 +234,7 @@ class DatabaseServiceClass {
     }
   }
 
-  async getAllProfiles() {
+  async getAllProfiles(selectedListType?: "All" | "Roster" | "Network" | "People") {
     await this.ensureReady();
     
     if (this.isWebFallback) {
@@ -258,7 +259,8 @@ class DatabaseServiceClass {
           birthday: '1994-05-15',
           lastContactDate: '2024-01-15',
           createdAt: '2024-01-01T00:00:00.000Z',
-          updatedAt: '2024-01-15T00:00:00.000Z'
+          updatedAt: '2024-01-15T00:00:00.000Z',
+          listType: 'Network'
         },
         {
           id: 2,
@@ -280,12 +282,23 @@ class DatabaseServiceClass {
           birthday: '1996-03-22',
           lastContactDate: '2024-01-10',
           createdAt: '2024-01-01T00:00:00.000Z',
-          updatedAt: '2024-01-10T00:00:00.000Z'
+          updatedAt: '2024-01-10T00:00:00.000Z',
+          listType: 'Roster'
         }
       ];
     }
     
-    const result = await this.db!.getAllAsync('SELECT * FROM profiles ORDER BY updatedAt DESC');
+    let query = 'SELECT * FROM profiles';
+    let params: any[] = [];
+    
+    if (selectedListType && selectedListType !== 'All') {
+      query += ' WHERE listType = ?';
+      params.push(selectedListType);
+    }
+    
+    query += ' ORDER BY updatedAt DESC';
+    
+    const result = await this.db!.getAllAsync(query, params);
     return result.map(profile => ({
       ...profile,
       tags: profile.tags ? JSON.parse(profile.tags) : [],
@@ -440,7 +453,8 @@ class DatabaseServiceClass {
       birthdayTextEnabled = 0,
       birthdayTextScheduledTextId = null,
       giftReminderEnabled = 0,
-      giftReminderId = null
+      giftReminderId = null,
+      listType = null
     } = profileData;
 
     const now = new Date().toISOString();
@@ -452,14 +466,14 @@ class DatabaseServiceClass {
           name = ?, age = ?, phone = ?, email = ?, relationship = ?,
           job = ?, notes = ?, tags = ?, photoUri = ?, parents = ?, kids = ?, brothers = ?, sisters = ?, siblings = ?, pets = ?, foodLikes = ?, foodDislikes = ?,
           interests = ?, instagram = ?, snapchat = ?, twitter = ?, tiktok = ?, facebook = ?, birthday = ?, lastContactDate = ?, 
-          birthdayTextEnabled = ?, birthdayTextScheduledTextId = ?, giftReminderEnabled = ?, giftReminderId = ?, updatedAt = ?
+          birthdayTextEnabled = ?, birthdayTextScheduledTextId = ?, giftReminderEnabled = ?, giftReminderId = ?, listType = ?, updatedAt = ?
         WHERE id = ?
       `, [
         name, age, phone, email, relationship, job, notes,
         JSON.stringify(tags), photoUri, JSON.stringify(parents), JSON.stringify(kids), JSON.stringify(brothers), JSON.stringify(sisters), JSON.stringify(siblings), JSON.stringify(pets),
         JSON.stringify(foodLikes), JSON.stringify(foodDislikes),
         JSON.stringify(interests), instagram, snapchat, twitter, tiktok, facebook, birthday, lastContactDate,
-        birthdayTextEnabled ? 1 : 0, birthdayTextScheduledTextId, giftReminderEnabled ? 1 : 0, giftReminderId, now, id
+        birthdayTextEnabled ? 1 : 0, birthdayTextScheduledTextId, giftReminderEnabled ? 1 : 0, giftReminderId, listType, now, id
       ]);
       
       // Log profile data for developer collection
@@ -472,14 +486,14 @@ class DatabaseServiceClass {
         INSERT INTO profiles (
           name, age, phone, email, relationship, job, notes, tags, photoUri, parents, kids, brothers, sisters, siblings, pets, foodLikes, foodDislikes,
           interests, instagram, snapchat, twitter, tiktok, facebook, birthday, lastContactDate,
-          birthdayTextEnabled, birthdayTextScheduledTextId, giftReminderEnabled, giftReminderId, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          birthdayTextEnabled, birthdayTextScheduledTextId, giftReminderEnabled, giftReminderId, listType, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         name, age, phone, email, relationship, job, notes,
         JSON.stringify(tags), photoUri, JSON.stringify(parents), JSON.stringify(kids), JSON.stringify(brothers), JSON.stringify(sisters), JSON.stringify(siblings), JSON.stringify(pets),
         JSON.stringify(foodLikes), JSON.stringify(foodDislikes),
         JSON.stringify(interests), instagram, snapchat, twitter, tiktok, facebook, birthday, lastContactDate,
-        birthdayTextEnabled, birthdayTextScheduledTextId, giftReminderEnabled, giftReminderId, now, now
+        birthdayTextEnabled, birthdayTextScheduledTextId, giftReminderEnabled, giftReminderId, listType, now, now
       ]);
       
       const newProfileId = result.lastInsertRowId;

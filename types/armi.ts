@@ -1,3 +1,5 @@
+import { ArmiList } from './armi-intents';
+
 export interface Profile {
   id: string;
   firstName: string;
@@ -16,6 +18,7 @@ export interface Profile {
   birthdayTextScheduledTextId?: number;
   giftReminderEnabled?: boolean;
   giftReminderId?: number;
+  listType?: ArmiList | null;
 }
 
 export type RelationshipType = 'Friend' | 'Family' | 'Work' | 'Dating' | 'Other';
