@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Pressable } from 'react-native';
-import { Search, Filter, Plus } from 'lucide-react-native';
-import { Users } from 'lucide-react-native';
+import { Search, Filter, Plus, Users, ChevronDown } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 
 interface SearchHeaderProps {
@@ -33,6 +32,7 @@ export function SearchHeader({ searchQuery, onSearchChange, onFilterPress, onAdd
         <Users size={32} color={theme.text} />
         <Pressable onPress={onTitlePress} style={styles.titleContainer}>
           <Text style={[styles.title, { color: theme.text }]}>My {getRosterLabel()}</Text>
+          <ChevronDown size={20} color={theme.primary} style={styles.dropdownIcon} />
         </Pressable>
       </View>
       <Text style={[styles.subtitle, { color: theme.primary }]}>{profileCount} profiles</Text>
@@ -74,6 +74,8 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 4,
   },
@@ -81,6 +83,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginLeft: 12,
+    flex: 1,
+  },
+  dropdownIcon: {
+    marginLeft: 8,
   },
   subtitle: {
     fontSize: 16,

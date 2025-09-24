@@ -94,7 +94,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const getRosterLabel = () => {
     switch (currentListType) {
       case 'All':
-        return 'All Contacts';
+        return 'Contacts';
       case 'Roster':
         return 'Roster';
       case 'Network':
@@ -102,7 +102,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       case 'People':
         return 'People';
       default:
-        return 'All Contacts';
+        return 'Contacts';
     }
   };
   // Don't render until theme is loaded to prevent flash

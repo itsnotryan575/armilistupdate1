@@ -24,7 +24,7 @@ const LIST_OPTIONS = [
   { 
     key: 'Roster' as ArmiListFilter, 
     label: 'Roster', 
-    description: 'Close friends and family',
+    description: 'Casual Connections',
     icon: Heart,
     color: '#EC4899' 
   },
@@ -38,7 +38,7 @@ const LIST_OPTIONS = [
   { 
     key: 'People' as ArmiListFilter, 
     label: 'People', 
-    description: 'Social connections',
+    description: 'Friends and Family',
     icon: Users,
     color: '#3B82F6' 
   },
