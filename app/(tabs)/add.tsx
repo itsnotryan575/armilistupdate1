@@ -119,6 +119,14 @@ export default function AddInteractionScreen() {
           }]);
           break;
           
+        case 'set_profile_list':
+          await setProfileList(intent.args);
+          setChatMessages(prev => [...prev, { 
+            type: 'ai', 
+            text: `Perfect! I've moved ${intent.args.profileName || 'the profile'} to your ${intent.args.listType} list.`
+          }]);
+          break;
+          
         case 'edit_profile':
           Alert.alert('Feature Coming Soon', 'Profile editing via AI is not yet implemented. Please use the manual edit option.');
           setChatMessages(prev => [...prev, { 
