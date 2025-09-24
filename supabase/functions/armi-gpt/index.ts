@@ -22,54 +22,54 @@ const SYSTEM_PROMPT = `
 You are ARMi's Intent Parser. Output STRICT JSON only (no prose).
 Return exactly one object: { "intent": string, "args": object }.
 
-INTENTS & REQUIRED FIELDS
-- "add_profile": args { name } + optional { phone, tags[], notes, relationshipType }
+ALLOWED INTENTS & REQUIRED FIELDS
+- "add_profile": args { name } + optional { phone, tags[], notes, relationshipType, listType }
 - "edit_profile": args { updates } AND one of { profileId, profileName }
+- "set_profile_list": args { listType } AND one of { profileId, profileName }
 - "schedule_text": args { when, message } AND one of { profileId, profileName }
 - "schedule_reminder": args { when } AND one of { profileId, profileName }
 - "none": args { explanation }
 
-DATE/TIME RULES
+LISTS
+- listType ∈ {"Roster","Network","People"}.
+- Infer listType when obvious:
+    "family","spouse","kids","close friend" → "Roster"
+    "coworker","boss","investor","client","mentor" → "Network"
+    "acquaintance","party friend","club","meetup","influencer" → "People"
+- If unclear, omit listType (client UI will ask). Do NOT guess randomly.
+
+TIME
 - All times MUST be ISO-8601 (e.g., "2025-01-22T15:30:00Z").
-- If user gives a RELATIVE time (e.g., "next friday 3pm", "tomorrow morning"), convert using context.now (ISO) and context.timezone (IANA, e.g., "America/Chicago").
-- If time OR target person is unclear → return intent "none" with a short "explanation".
-- Do not guess calendar dates like "her birthday" unless the date is explicitly known from context.
+- Use context.now + context.timezone (IANA) to resolve relative times.
+- If time or required fields are unclear, return intent "none" with a short "explanation".
 
-DISAMBIGUATION & NORMALIZATION
-- Prefer profileId when provided; else use profileName exactly as written.
-- If multiple names are present, choose the one most clearly associated to the action (e.g., the recipient of a text or reminder). If still ambiguous → return "none".
-- Normalize tags to lowercase strings.
-- Do not invent phone numbers, emails, or IDs.
-- Include ONLY the fields relevant to the chosen intent; omit unrelated keys.
-
-INFERRED FIELDS (careful)
-- For "schedule_reminder", a short "reason" may be extracted from wording (e.g., "check in", "job interview").
-- For "add_profile", you may infer relationshipType from words like "friend", "coworker", "cousin", "investor". Put other descriptors into "notes" or "tags".
-- Never infer dates; only transform relative → absolute using context.
-
-CONTEXT (JSON provided by client)
-- context.now: current ISO timestamp (Z or with offset)
-- context.timezone: IANA timezone
-- context.knownProfiles: array of { id, name }
-Use these ONLY for date conversion and to avoid inventing IDs. Do not list them in output.
+SANITY
+- Do not invent phone numbers or IDs.
+- Normalize tags to lowercase; include only relevant fields.
 
 EXAMPLES
-User: {"message":"Add Kayleigh, 555-2012, tag friend","context":{}}
-Return: {"intent":"add_profile","args":{"name":"Kayleigh","phone":"555-2012","tags":["friend"]}}
+User: {"message":"Add Kayleigh, 555-2012, friend from work","context":{}}
+Return: {"intent":"add_profile","args":{"name":"Kayleigh","phone":"555-2012","tags":["friend"],"relationshipType":"friend","listType":"Network"}}
 
-User: {"message":"remind me next friday at 3 to check in w/ Kay","context":{"now":"2025-09-22T18:00:00Z","timezone":"America/Chicago"}}
+User: {"message":"remind me next friday at 3 to check in w/ Kay","context":{"now":"2025-01-22T18:00:00Z","timezone":"America/Chicago"}}
 Return: {"intent":"schedule_reminder","args":{"profileName":"Kay","when":"2025-09-26T20:00:00Z","reason":"check in"}}
 
-User: {"message":"text Lisa friday 8am: Good luck today!","context":{"now":"2025-09-22T18:00:00Z","timezone":"America/Chicago","knownProfiles":[{"id":"p1","name":"Lisa Nguyen"}]}}
+User: {"message":"text Lisa friday 8am: Good luck today!","context":{"now":"2025-01-22T18:00:00Z","timezone":"America/Chicago","knownProfiles":[{"id":"p1","name":"Lisa Nguyen"}]}}
 Return: {"intent":"schedule_text","args":{"profileName":"Lisa","when":"2025-09-26T13:00:00Z","message":"Good luck today!"}}
 
 User: {"message":"change Michael's number to 303-555-7788","context":{}}
 Return: {"intent":"edit_profile","args":{"profileName":"Michael","updates":{"phone":"303-555-7788"}}}
 
-User: {"message":"add my neighbor (no name yet) and remind me next month","context":{}}
-Return: {"intent":"none","args":{"explanation":"Missing required name for add_profile and missing specific date for reminder"}}
+User: {"message":"Move Lisa to my People list","context":{}}
+Return: {"intent":"set_profile_list","args":{"profileName":"Lisa","listType":"People"}}
 
-User: {"message":"schedule a text: 'yo' ","context":{}}
+User: {"message":"Create a contact for my cousin Michael—he moved to Denver","context":{}}
+Return: {"intent":"add_profile","args":{"name":"Michael","relationshipType":"family","notes":"moved to Denver","listType":"Roster"}}
+
+User: {"message":"Add James (unknown)","context":{}}
+Return: {"intent":"add_profile","args":{"name":"James"}}
+
+User: {"message":"schedule a text: yo","context":{}}
 Return: {"intent":"none","args":{"explanation":"Missing when and target (profileId or profileName) for schedule_text"}}
 `;
 
@@ -83,10 +83,15 @@ function validateIntent(parsed: any): { ok: boolean; err?: string } {
   switch (intent) {
     case "add_profile":
       if (!args.name) return { ok: false, err: "add_profile requires name" };
+      if (args.listType && !["Roster","Network","People"].includes(args.listType)) return { ok: false, err: "invalid listType" };
       break;
     case "edit_profile":
       if (!args.updates) return { ok: false, err: "edit_profile requires updates" };
       if (!args.profileId && !args.profileName) return { ok: false, err: "edit_profile requires profileId or profileName" };
+      break;
+    case "set_profile_list":
+      if (!args.profileId && !args.profileName) return { ok: false, err: "set_profile_list requires profileId or profileName" };
+      if (!args.listType || !["Roster","Network","People"].includes(args.listType)) return { ok: false, err: "invalid listType" };
       break;
     case "schedule_text":
       if (!args.when || !args.message) return { ok: false, err: "schedule_text requires when & message" };
