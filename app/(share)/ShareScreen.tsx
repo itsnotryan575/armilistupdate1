@@ -132,7 +132,7 @@ export function debugGenerateFakeRoster(count: number): Profile[] {
 
 export default function ShareScreen() {
   const router = useRouter();
-  const { isDark, usageMode, isLoaded } = useTheme();
+  const { isDark, isLoaded } = useTheme();
   const shareCardRef = useRef<ShareCardRef>(null);
   
   const [templateType, setTemplateType] = useState<TemplateType>('Stats');
@@ -184,7 +184,7 @@ export default function ShareScreen() {
     if (isLoaded) {
       initializePreset();
     }
-  }, [isLoaded, usageMode]);
+  }, [isLoaded]);
 
   const loadPresetSettings = async () => {
     try {
@@ -217,23 +217,8 @@ export default function ShareScreen() {
         setPrivacyPreset(preset);
         setTemplateType(PRESET_TEMPLATE_MAPPING[preset]);
       } else {
-        // No saved preset, use the global usage mode as initial value
-        let initialPreset: PrivacyPreset = 'Social'; // fallback default
-        
-        // Map usage mode to privacy preset
-        switch (usageMode) {
-          case 'personal':
-            initialPreset = 'Personal';
-            break;
-          case 'social':
-            initialPreset = 'Social';
-            break;
-          case 'professional':
-            initialPreset = 'Professional';
-            break;
-          default:
-            initialPreset = 'Social';
-        }
+        // No saved preset, default to Social
+        const initialPreset: PrivacyPreset = 'Social';
         
         setPrivacyPreset(initialPreset);
         setTemplateType(PRESET_TEMPLATE_MAPPING[initialPreset]);

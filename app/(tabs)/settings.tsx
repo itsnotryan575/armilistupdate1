@@ -23,7 +23,6 @@ export default function SettingsScreen() {
     { icon: Bell, title: 'Notifications', subtitle: 'Push notifications and alerts', action: 'notifications' },
     { icon: Share, title: 'Share Studio', subtitle: 'Create and share your ARMi cards', action: 'share' },
     { icon: MessageSquare, title: 'Send Feedback', subtitle: 'Report bugs, suggest features', action: 'feedback' },
-    { icon: User, title: 'Usage', subtitle: 'Choose your app style and terminology', action: 'usage' },
     { icon: Palette, title: 'Appearance', subtitle: 'Theme and display options', action: 'appearance' },
     { icon: Info, title: 'About', subtitle: 'App version and information', action: 'about' },
     { icon: LogOut, title: 'Sign Out', subtitle: 'Sign out of your account', action: 'signout' },
@@ -67,8 +66,6 @@ export default function SettingsScreen() {
                   router.push('/settings/profile');
                 } else if (item.action === 'appearance') {
                   router.push('/settings/appearance');
-                } else if (item.action === 'usage') {
-                  router.push('/settings/usage');
                 } else if (item.action === 'notifications') {
                   router.push('/settings/notifications');
                 } else if (item.action === 'about') {

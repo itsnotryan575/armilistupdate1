@@ -4,15 +4,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArmiList } from '@/types/armi-intents';
 
 type ThemePreference = 'light' | 'dark' | 'system';
-type UsageMode = 'social' | 'personal' | 'professional';
 type ArmiListFilter = 'All' | ArmiList;
 
 interface ThemeContextType {
   isDark: boolean;
   themePreference: ThemePreference;
   setThemePreference: (preference: ThemePreference) => void;
-  usageMode: UsageMode;
-  setUsageMode: (mode: UsageMode) => void;
   currentListType: ArmiListFilter;
   setCurrentListType: (listType: ArmiListFilter) => void;
   getRosterLabel: () => string;
@@ -28,7 +25,6 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const systemColorScheme = useColorScheme();
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>('system');
-  const [usageMode, setUsageModeState] = useState<UsageMode>('social');
   const [currentListType, setCurrentListTypeState] = useState<ArmiListFilter>('All');
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -49,11 +45,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         setThemePreferenceState(saved as ThemePreference);
       }
       
-      const savedUsage = await AsyncStorage.getItem('usage_mode');
-      if (savedUsage && ['social', 'personal', 'professional'].includes(savedUsage)) {
-        setUsageModeState(savedUsage as UsageMode);
-      }
-      
       const savedListType = await AsyncStorage.getItem('current_list_type');
       if (savedListType && ['All', 'Roster', 'Network', 'People'].includes(savedListType)) {
         setCurrentListTypeState(savedListType as ArmiListFilter);
@@ -71,15 +62,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       setThemePreferenceState(preference);
     } catch (error) {
       console.error('Error saving theme preference:', error);
-    }
-  };
-
-  const setUsageMode = async (mode: UsageMode) => {
-    try {
-      await AsyncStorage.setItem('usage_mode', mode);
-      setUsageModeState(mode);
-    } catch (error) {
-      console.error('Error saving usage mode:', error);
     }
   };
 
@@ -111,7 +93,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }
 
   return (
-    <ThemeContext.Provider value={{ isDark, themePreference, setThemePreference, usageMode, setUsageMode, currentListType, setCurrentListType, getRosterLabel, isLoaded }}>
+    <ThemeContext.Provider value={{ isDark, themePreference, setThemePreference, currentListType, setCurrentListType, getRosterLabel, isLoaded }}>
       {children}
     </ThemeContext.Provider>
   );
