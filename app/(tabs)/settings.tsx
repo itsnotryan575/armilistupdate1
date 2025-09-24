@@ -100,7 +100,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.secondaryText }]}>
-            Version 1.2.10
+            Version 1.3.10
           </Text>
         </View>
       </ScrollView>

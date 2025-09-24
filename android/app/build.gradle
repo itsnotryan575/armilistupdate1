@@ -92,8 +92,8 @@ android {
         applicationId 'com.armi.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 51
-        versionName "1.2.10"
+        versionCode 52
+        versionName "1.3.10"
     }
     signingConfigs {
         debug {
